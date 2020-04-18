@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Doğanın Matematiği
-bigimg: /img/nature.jpg
+bigimg: /img/nature.jpeg
 subtitle: ...
 tags: [biology, math]
 ---
