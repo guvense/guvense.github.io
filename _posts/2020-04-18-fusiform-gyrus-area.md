@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Doğanın Matematiği
+title: Fusiform Gyrus Area
 bigimg: /img/brain.jpeg
 subtitle: ...
 tags: [biology]
