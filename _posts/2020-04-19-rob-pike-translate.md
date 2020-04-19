@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Golang and Errors
+title: Go at Google Language Design in the Service of Software Engineering
 image: /img/golang.png
 tags: [go, programming, translation]
 comments: true
