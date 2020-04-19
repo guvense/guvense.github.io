@@ -39,7 +39,7 @@ Kısaca Google' da yazılım geliştirme süreci karmaşıktır, yavaş hatta ha
 
 Go projesinin amacı geliştirme sürecinde bu hantallığı ve yavaşlığı azaltmaktır. Böylece bu süreci üretken ve ölçeklenebilir kılmaktır. Bu programlama dili geniş ölçekli yazılım sistemlerini yazan, okuyan, bakımını sağlayan kişiler tarafından ve bu kişiler için tasarlandı.
 
-Bu nedenler, Go' nun amacı yazılım dili tasarımı üzerine araştırma yapmaktan ziyade, tasarımcılar için ve birlikte çalışan mühendisler için çalışma ortamını geliştirmek ve bu çalışma için uygun hale getirmektir.
+Bu nedenle, Go' nun amacı yazılım dili tasarımı üzerine araştırma yapmaktan ziyade, tasarımcılar için ve birlikte çalışan mühendisler için çalışma ortamını geliştirmek ve bu çalışma için uygun hale getirmektir.
 Go dili programla dili araştırmasından ziyade, yazılım mühendisliği ile ilgilir. Daha açıkça belirtmek gerekirse, yazılım mühendiliğinin hizmet kısmındaki dil tasarımı denilebilir.
 
 Ancak bir dil yazılım mühendisliğine nasıl yardımcı olabilir? Bu makalenin geri kalanı bu sorunun cevabıdır.
@@ -56,9 +56,31 @@ Go duyurulduğunda, bazıları tarafından gelişmiş dillerde olması gereken �
 - Güncellemelerin maliyeti
 - Versyon karmaşası
 - Atomatik araçların yazım zorluğu
-- _cross-language builds_
+- Karışık dil derlenmesi
 
 Bir dilin asli özellikleri bu sorunları ele almaz. Yazılım mühendisliğine daha geniş bir bakış açısı gerekiyor ve Go'nun tasarımında bu sorunların çözümlerine odaklanmaya çalıştık.
 
-Basit olarak, örneğin, program yapısının temsilini göz önünde bulundurun. Bazıları Go'nun C türü süslü parantezlerle sağlanan blok yapısına, Python veya Haskell deki gibi boşlukların kullanılması gerektiğini düşünerek itiraz ettiler. Fakat, biz diller arası yapıların neden olduğu derleme ve test hatalarını izleme konusunda geniş deneyime sahibiz. Örneğin, Başka bir dilde, örneğin bir SWIG çağırma yoluyla gömülü olan Python snippet'i, çevredeki kodun girintisindeki bir değişiklik nedeniyle kurnazca ve görünmez bir şekilde kırılmıştır.
+Basit olarak, örneğin, program yapısının temsilini göz önünde bulundurun. Bazıları Go'nun C türü süslü parantezlerle sağlanan blok yapısına, Python veya Haskell deki gibi boşlukların kullanılması gerektiğini düşünerek itiraz ettiler. Fakat, biz diller arası yapıların neden olduğu derleme ve test hatalarını izleme konusunda geniş deneyime sahibiz. Örneğin, Başka bir dilde, örneğin bir SWIG çağırma yoluyla gömülü olan Python snippet'i, çevreleyen kodun girintisindeki bir değişiklik nedeniyle kurnazca ve görünmez bir şekilde kırılmıştır.
 Bizim bu duruma karşı bakış açımız, girinti için boşlukların kullanılması küçük programlar için daha sağlıklı olsada, ölçeklenebilir değil ve daha büyük ve karışık kod üzerinde, daha fazla sorun yaratabilir. Güvenlik ve güvenilirlik açısından kolaylıktan vazgeçmek daha iyidir, bu nedenle Go'nun küme parantezle oluşturulmuş blokları vardır.
+
+**5. C ve C++ daki Bağımlılıklar**
+
+Paket bağımlılıklarının ele alınmasında ölçeklendirmenin ve diğer sorunların daha önemli bir örneği ortaya çıkar. Tartışmaya paket bağımlıklarının C ve C++'da nasıl çalıştıklarını gözden geçirerek başlıyoruz.
+
+_ANSI C_, ilk standartlaştırılması 1989'da, _header_ dosyalarında bulunan **#ifndef** _koruyucuları_ fikrini öne sürdü. Şimdi her yerde bulunan fikir, her _header_ dosyasının bir koşullu derleme yan tümcesi ile parantez içine alınmasıdır, böylece dosya hatasız bir şekilde birden çok kez _include_ edilebilir. Örbeğin, Unix _header_ dosyası olan **<sys/stat.h>** aşağıdaki gibidir:
+
+```
+/* Large copyright and licensing notice */
+#ifndef _SYS_STAT_H_
+#define _SYS_STAT_H_
+/* Types and other definitions */
+#endif
+```
+
+Buradaki amaç, C önişlemcisinin dosyayı okuması ancak ikici ve sonrakş okumalarda bu bölümü dikkat almamasıdır. Bir sembol olan **_SYS_STAT_H_**, dosyanın ilk okunmasında tanımlanır ve koruyucu görevi üstlenir. Diğer okumalarda tanımlı olduğu tekrar tanımlanmaz.
+
+Bu tasarımın bir çok faydalı özelliği varıdr, en önemlisi ise, her bir _header_ dosyası diğer _header_ dosyaları dahil olsa bile tüm bağımlılılarını güvenli bir şekilde _#include_ edebilir.
+
+Fakat bu tasarımın ölçeklenmesi oldukça kötüdür.
+
+1984'te, Unix **ps** komutunun kaynağı olan bir ps.c derlemesinin, tüm ön işlemlerin tamamlanmasına kadar 37 kez _<sys/stat.h>_ 'ı _#include_ ettiği gözlendi. Hatta bunu yaparken, içerikler 36 kere atılsa bile, çoğunlukta olan C _implementation_'ları 37 kere dosyayı açacak, okuyacak ve yazacaktır. Aslında, bu davranış C ön işlemcisinin potansiyel olarak karmaşık makro semantiği için gereklidir.
