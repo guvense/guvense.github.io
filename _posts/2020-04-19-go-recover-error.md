@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Go Recover Error
+title: Go and Errors
 image: /img/golang.png
 tags: [go, programming]
 comments: true
