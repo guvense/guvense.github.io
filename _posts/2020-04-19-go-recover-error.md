@@ -26,7 +26,7 @@ _string_ is a built type in go, but I need to declare that this is a ComedyError
 There is no implements keyword like java. So how can we implement an error interface to our own error defined type?
 Actually, when we use **receive method** with a name of the function which declared in the interface, Go will understand that this type implements that interface.
 
-Now we have a new term which is receiving method.
+Now we have a new term which is **receive method**.
 Let's understand what is receive methods firstly.
 
 ```go
