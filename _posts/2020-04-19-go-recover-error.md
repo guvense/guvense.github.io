@@ -18,7 +18,6 @@ For instance, I am going to define a type which called custom type.
 
 ```
 type ComedyError string
-
 ```
 
 What I done above!
@@ -31,7 +30,6 @@ Now we have a new term which is receive method.
 Lets understand that what is receive methods firstly.
 
 ```
-
 type MyString string
 
 func (c MyString) hello() {
@@ -47,7 +45,6 @@ There is a hello function, now we can use
 	var foo MyString
 	foo = MyString("hi")
 	foo.hello()
-
 ```
 
 Now I declare a MyString type and I can use hello function with type. The output of code will be value of MyString. This called receive method.
@@ -60,7 +57,6 @@ Now I need to write a recieve method to my ComedyError type and the name of func
     func (c ComedyError) Error() string {
 	    return string(c)
 }
-
 ```
 
 Now I declared my own error type. Now lets use it!
@@ -69,7 +65,6 @@ Now I declared my own error type. Now lets use it!
 	var err error
 	err = ComedyError("Keep slience")
 	fmt.Println(err)
-
 ```
 
 First line, you can see a error interface with name of err. I can assign my error type to error interface because I already declared its function.
@@ -79,9 +74,7 @@ No panic !
 There is a built-in function in order to stop program execution. We can easly use panic.
 
 ```
-
 panic("oh no!)
-
 ```
 
 Error handling is one of the most important part of programming. During our flow there could be errors. Even we can throw an error in order to cut excution of program.
@@ -89,15 +82,11 @@ In go there is also a buit-in **recover** function in order to catch panic error
 
 ```
 func calmDown() {
-
 	p := recover()
-
 	err, ok := p.(error)
-
 	if ok {
 		fmt.Println(err.Error())
 	}
-
 }
 ```
 
@@ -105,7 +94,6 @@ When we call this function after panic. Recover will catch a value of panic. Thi
 
 ```
 	err, ok := p.(error)
-
 ```
 
 Thanks to this assertion, we can understand that p is a error.
@@ -117,9 +105,7 @@ There is a defer function in order to execute functions after panics.
 
 ```
 	defer calmDown()
-
 	err := ComedyError("Keep slience")
-
 	panic(err)
 ```
 
