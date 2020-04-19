@@ -1,14 +1,14 @@
 ---
 layout: post
 title: Go Recover Error
-image: /img/go.png
+image: /img/golang.png
 tags: [go, programming]
 comments: true
 ---
 
 In go, error is a interface. Therefore we can define our own errors for our types.
 
-```
+```go
 type error interface {
     Error() string
 }
@@ -16,7 +16,7 @@ type error interface {
 
 For instance, I am going to define a type which called custom type.
 
-```
+```go
 type ComedyError string
 ```
 
@@ -29,7 +29,7 @@ Actually, when we use **receive method** with name of function which declared in
 Now we have a new term which is receive method.
 Lets understand that what is receive methods firstly.
 
-```
+```go
 type MyString string
 
 func (c MyString) hello() {
@@ -37,34 +37,34 @@ func (c MyString) hello() {
 }
 ```
 
-This is receive method which belongs to ComedyError. Go is not consist of OOP. Therefore we haven't objects. Thats mean we haven't function which bind with types. In go, we can bind our function to type with receive methods.
+This is receive method which belongs to ComedyError. Go is not Object Oriented language. Therefore, we haven't objects. Thats mean we haven't functions which bind with types. In go, we can bind our function to type with receive methods.
 
-There is a hello function, now we can use
+There is a hello function, now we can use,
 
-```
-	var foo MyString
-	foo = MyString("hi")
-	foo.hello()
+```go
+var foo MyString
+foo = MyString("hi")
+foo.hello()
 ```
 
 Now I declare a MyString type and I can use hello function with type. The output of code will be value of MyString. This called receive method.
 
-Now I need to write a recieve method to my ComedyError type and the name of function should be Error because this name declared into error interface.
+I need to write a recieve method to my ComedyError type and the name of function should be Error because this name declared into error interface.
 
-```
-    type ComedyError string
+```go
+type ComedyError string
 
-    func (c ComedyError) Error() string {
-	    return string(c)
+func (c ComedyError) Error() string {
+    return string(c)
 }
 ```
 
 Now I declared my own error type. Now lets use it!
 
-```
-	var err error
-	err = ComedyError("Keep slience")
-	fmt.Println(err)
+```go
+var err error
+err = ComedyError("Keep slience")
+fmt.Println(err)
 ```
 
 First line, you can see a error interface with name of err. I can assign my error type to error interface because I already declared its function.
@@ -73,14 +73,14 @@ No panic !
 
 There is a built-in function in order to stop program execution. We can easly use panic.
 
-```
+```go
 panic("oh no!)
 ```
 
-Error handling is one of the most important part of programming. During our flow there could be errors. Even we can throw an error in order to cut excution of program.
+Error handling is one of the most important part of programming. During our flow there could be errors. Even, we can throw an error in order to cut excution of program.
 In go there is also a buit-in **recover** function in order to catch panic errors.
 
-```
+```go
 func calmDown() {
 	p := recover()
 	err, ok := p.(error)
@@ -92,8 +92,8 @@ func calmDown() {
 
 When we call this function after panic. Recover will catch a value of panic. This value will be any type, so we need to assert that type which is called type assertions. When we catch value which comes from panic, we need to be sure that this value is **error**. Therefore we can use Error function.
 
-```
-	err, ok := p.(error)
+```go
+err, ok := p.(error)
 ```
 
 Thanks to this assertion, we can understand that p is a error.
@@ -103,10 +103,10 @@ Then we can print error.
 Wait a minite. How can we call this function after panic. As I said panic stops execution of program.
 There is a defer function in order to execute functions after panics.
 
-```
-	defer calmDown()
-	err := ComedyError("Keep slience")
-	panic(err)
+```go
+defer calmDown()
+err := ComedyError("Keep slience")
+panic(err)
 ```
 
 With defer keyword we sure that calDown will be excuted after panic!
