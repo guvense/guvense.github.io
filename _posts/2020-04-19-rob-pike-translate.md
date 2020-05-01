@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Go at Google Language Design in the Service of Software Engineering
+title: Go at Google Language Design in the Service of Software Engineering (Türkçe Çeviri)
 image: /img/golang.png
 tags: [go, programming, translation]
 comments: true
@@ -116,3 +116,45 @@ Bunlardan yola çıkarak, Go'nun tasarımına yazılım mühendisliği perspekti
 **6. Go'da Bağımlılıklar**
 
 C ve C++ daki bağımlılıkları detaylı bir şekilde inceledikten sonra, Go'nun bu durumu nasıl ele aldığını görmek için iyi bir başlangıç olacaktır. Bağımlılıklar dil tarafından, sözdizimsel ve semantik olarak dil tarafından tanımlanır. Açık bir şekilde tanımlanmış, nettir ve "hesaplanabilir" yani analiz edilmesi için gerekli araçlar tasarlanabilir.
+
+*package* ifadesinden sonra bir bağımlılıkların *import* edilmesi şu şekildedir. Her bir kaynak dosyası bir veya biden fazla *import* ifadesi içerebilir. *string* sabiti olarak tanımlanan paket *import* ifadesi ile kaynak dosyaya eklenir.
+
+```go
+import "encoding/json"
+```
+
+Go'yu ölçeklendirmedeki ilk adım, *dependency-wise* olarak tanımlanan kullanılmayan bir bağımlık olması durumunda derleme zamanında hata alınmasıdır. Burada önemli olan *warning* anlamında kullanılar bir **uyarı** değil, **hata**'dır. Yani kullanılmayan bir bağımlılık varsa uygulama derlenmeyecektir. Bu durum yalnızca kaynak dosyada kullanılacak olan bağımlıkları içereceğini garantiler. Bu sayede ekstra kod derlenmeyeceği için derleme süresini kısaltacaktır.
+
+Bir diğer adım ise, *compiler* olarak tanımlanan Go kodunu makine koduna çeviren aracın verimliliği garanti etmesidir. 3 paketli Go programı ve bağımlık grafiğine bir göz atalım: 
+
+- paket A paket B yi import ediyor *A imports B*
+- paket B paket C yi import ediyor *B imports C*
+- paket A paket C yi import **etmiyor** 
+
+Bu durum A paketinin C paketini B paketi aracı ile dolaylı olarak kullandığı anlamına gelmektedir.A'da kullanılar bazı ifadeler B nin C den aldığı ifadeleri kullanıyor olsa bile, A' nın kaynak kodunda C paketi ile ilgili herhangi bir tanımlayıcı bulunmayacaktır. Örnek vermek gerekise, A B'de bulunan bir üyesi C den gelen bir *struct*' ı referans alıyor olabilir. Fakat A o üyeyi referans almayacaktır. Daha açıklayıcı bir örnek vermek gerekirse, A' nın B den *formatted I/O* paketi *import* ettiğini düşünelim. Fakat B bu import edilmiş paketi C'den aldığı *buffered I/O* implementasyonunu olarak kullanmaktayken, A kendisi  *buffered I/O* paketini kullanmayacaktır.
+
+Böyle bir programı *build* etme süreci şu şekilde işleyecektir. Öncelikle C derlenecek, bağımlı paketler kendilerine bağımlı paketlerden önce oluşturulmalıdır. Sonra B derlenir, son olarak A derlenir ve daha sonra *link* denilen bir şekilde birbirlerine bağlanırlar.
+
+A derlerdiğinde, derleyici B nin kaynak dosyasını değil *object* dosyasını okur. Bu *object* dosyası onu import edicek paket için gerekli tüm bilgiyi içerir. Örneğin, A paketi içinde şu şekilde bir ifade varsa:
+
+```go
+import "B"
+```
+Bu ifade ile B'nin *object* dosyası okunur ve gerkeli bilgiler A'ya aktarılır. Bu bilgi, B'nin derleme zamanınında C'den ihtiyaç duyduğu het türlü bilgiyi içerir. Diğer bir ifade ile, B derlendiğinde, üretilmiş olan *object* dosyası B' nin *public* olarak sunulmuş tüm arayüzünü içerir.
+
+Derleyici *import* ifadesi ile, ifadenin içine yer alan *string* şeklinde tanımlanan yalnızca bir *object* dosyası çalıştırır. Bu, elbette, bağımlılık yönetimine yönelik *Plan 9 C* (ANSI C'nin aksine) yaklaşımını hatırlatır, ancak aslında, derleyici, Go kaynak dosyası derlendiğinde **header** dosyasını yazacaktır. Bu süreç *Plan 9*'dan daha otomatik ve daha verimlidir. Buna ek olarak veri okunurken, *import* ifadesi değerlendirlirken yanlızca "dışarıya aktarılan" bilgi eklenir, programın genel kaynak kodu eklenmez. Genel derleme süresi üzerindeki etki çok büyük olabilir ve kod tabanı büyüdükçe ölçeklenecektir. Bağımlılık grafiğinin yürütülmesi ve dolayısıyla derlenmesi için gereken süre, C ve C ++ 'ın "*include of include file*" modelinden çok daha az olabilir.
+
+Ek olarak, bu bağımlık yönetime yönelik olan genel yaklaşımın orjinal olmadığını vurgulamak gerekir. Bu fikir, 1970'lere kadar gitmektedir ve Modula-2 ve Ada gibi diller bu yaklaşımı kullanır. C ailesinde ise Java bu yaklaşıma ait  öğeler içerir.
+
+Derleme sürecini daha verimli hale getirmek için, *object* dosyasındaki dışa aktarılacak veri ilk olacak şekilde ayarlanabilir. Böylece derleyici bu bölümün sonuca ulaştığında okumayı sonlandırabilir.
+
+Bağımlılık yönetimine bu yaklaşım, Go derlemelerinin C veya C ++ derlemelerinden daha hızlı olmasının en büyük nedenidir. Başka bir faktör, Go'nun dışa aktarma verilerini *object* dosyasına yerleştirmesidir; bazı diller yazarın yazmasını veya derleyicinin bu bilgileri içeren ikinci bir dosya oluşturmasını gerektirir. Bu durum çok fazla dosyanın iki kez açılmasına neden olacaktır. Go'da ise paketin *import* edilmesi için yalnızca bir dosya vardır. Ayrıca, tek dosya yaklaşımı, dışa aktarılacak verilerinin (veya C / C ++ 'da *header* dosyasının) hiçbir zaman *object* dosyasına göre güncelliğini yitiremeyeceği anlamına gelir.
+
+Kayıt için, kaynak kodun nasıl açıldığını görmek amacıyla, önceden C++ ile yazılmış büyük çaplı bir Google programını Go ile yazılmış sürümünün derleme sürecini ölçtük. Yaklaşık 40X, C ++ 'dan elli kat daha iyi (ve daha basit ve dolayısıyla daha hızlı işlenme ) olduğunu bulduk, ancak yine de beklediğimizden daha büyük oldu.
+Bunun iki nedeni var. İlk olarak bir hata bulduk: Go derleyicisi, dışa aktarma bölümünde bulunması gerekmeyen önemli miktarda veri üretiyordu. İkincisi, dışa aktarma verileri, geliştirilebilecek karmaşık kodlama kullanıyordu. Bu sorunları ele almayı planlıyoruz.
+
+Her şeye rağmen, yapılacak elli katlık bir etki, dakikaları saniyeye çevirir.
+
+Go bağımlık grafiğinin bir başka özelliği ise döngüsel olmamasıdır. Dil, grafikte dairesel bir içe aktarma yapılamayacağını tanımlar.Ek olarak, derleyici ve *linker* her birinin var olup olmadığını kontrol eder. Ara sıra yararlı olmalarına rağmen, dairesel *import*'lar ölçeklenmede önemli sorunlar yaratmaktadır. Derleyicinin daha büyük kaynak dosyaları ile aynı anda ilgilenmesini gerektirir ve bu da artış gösteren derlemeleri yavaşlatır. 
+
+Dairesel *import*'lar bazen sorun çıkmasına neden olabilir. Fakat *tree*'yi temiz tutar ve paketler arasında düzgün bir sınır oluşmasını gerektirir. Go'daki tasarım kararlarının çoğunda olduğu gibi, programcıyı öncesinde büyük ölçeklenme sorununu düşünmeye iter (bu örnekte paket sınırları). Bu durum daha sonraya bırakılırsa hiçbir zaman tatmin edici bir şekilde ele alınamaz. Standart kütüphanenin tasarımı süresice, bağımlılıkları kontrol edilmesi için büyük çaba harcandı. Küçük bir kodu kopyalamak, bir fonksiyon için büyük bir kütüphaneyi çekmek yerine daha sağlıklı olabilir. Bağımlıkların bu şekilde temiz tutulması kodun yeniden kullanılabilir hale getirir. Uygulamada bunun bir örneği olarak, (düşük seviyeli) net paketin, daha büyük ve *dependency-heavy* biçimlendirilmiş I/O paketine bağlımlı hale gelmemek için kendi tamsayıdan ondalığa dönüştürme implementasyonuna sahip olması verilebilir.Başka bir örnek ise, "String" dönüştürme paketi olan **strconv**'un, büyük Unicode karakter sınıfı tablolarını çekmek yerine 'yazdırılabilir' karakterler tanımlanmasının özel bir implementasyonuna sahiptir.
