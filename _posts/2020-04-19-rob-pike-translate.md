@@ -101,7 +101,7 @@ Bu kontrolsüz bağımlıklarının ve ölçekleme sorununun sonucu olarak, Goog
 
 Dağıtılmış derleme sistemi ile birlikte düşünülecek olsa dahi, büyük bir Google derlemesi dakikalar almaktadır. 2007'deki bu *binary* dağıtılmış derleme sistemi kullanılarak 45 dakika aldı, şuan ki sürümü 27 dakika almakta, tabii bu süreçte programın kendisi ve bağımlılıkları büyüdü. Derleme sisteminin ölçeklenmesini sağlamak için gerekli olan bu mühendislik çabası yazılım inşa edildikçe artmaya devam etmektedir.
 
-**5. Go'ya Giriş**
+**6. Go'ya Giriş**
 
 Derleme yavaşladığında, bu konu hakkında kafa yormanın zamanı gelmiştir. Go'nun kökeniyle ilgili, 45 dakikalık bir derleme sürecinde go fikrinin ortaya çıktığına dair söylenen bir efsane vardır. Sonuç olarak Google Web Servisleri gibi programlar için yazılacak olan yeni bir dilin tasarlanmasının gerektiği ortaya çıktı. Bu dilde Google programcılarının hayatını kolaylaştıracağı ortada olduğu görüldü.
 
@@ -113,7 +113,7 @@ Derleme yavaşladığında, bu konu hakkında kafa yormanın zamanı gelmiştir.
 
 Bunlardan yola çıkarak, Go'nun tasarımına yazılım mühendisliği perspektifinden bakalım.
 
-**6. Go'da Bağımlılıklar**
+**7. Go'da Bağımlılıklar**
 
 C ve C++ daki bağımlılıkları detaylı bir şekilde inceledikten sonra, Go'nun bu durumu nasıl ele aldığını görmek için iyi bir başlangıç olacaktır. Bağımlılıklar dil tarafından, sözdizimsel ve semantik olarak dil tarafından tanımlanır. Açık bir şekilde tanımlanmış, nettir ve "hesaplanabilir" yani analiz edilmesi için gerekli araçlar tasarlanabilir.
 
@@ -158,3 +158,63 @@ Her şeye rağmen, yapılacak elli katlık bir etki, dakikaları saniyeye çevir
 Go bağımlık grafiğinin bir başka özelliği ise döngüsel olmamasıdır. Dil, grafikte dairesel bir içe aktarma yapılamayacağını tanımlar.Ek olarak, derleyici ve *linker* her birinin var olup olmadığını kontrol eder. Ara sıra yararlı olmalarına rağmen, dairesel *import*'lar ölçeklenmede önemli sorunlar yaratmaktadır. Derleyicinin daha büyük kaynak dosyaları ile aynı anda ilgilenmesini gerektirir ve bu da artış gösteren derlemeleri yavaşlatır. 
 
 Dairesel *import*'lar bazen sorun çıkmasına neden olabilir. Fakat *tree*'yi temiz tutar ve paketler arasında düzgün bir sınır oluşmasını gerektirir. Go'daki tasarım kararlarının çoğunda olduğu gibi, programcıyı öncesinde büyük ölçeklenme sorununu düşünmeye iter (bu örnekte paket sınırları). Bu durum daha sonraya bırakılırsa hiçbir zaman tatmin edici bir şekilde ele alınamaz. Standart kütüphanenin tasarımı süresice, bağımlılıkları kontrol edilmesi için büyük çaba harcandı. Küçük bir kodu kopyalamak, bir fonksiyon için büyük bir kütüphaneyi çekmek yerine daha sağlıklı olabilir. Bağımlıkların bu şekilde temiz tutulması kodun yeniden kullanılabilir hale getirir. Uygulamada bunun bir örneği olarak, (düşük seviyeli) net paketin, daha büyük ve *dependency-heavy* biçimlendirilmiş I/O paketine bağlımlı hale gelmemek için kendi tamsayıdan ondalığa dönüştürme implementasyonuna sahip olması verilebilir.Başka bir örnek ise, "String" dönüştürme paketi olan **strconv**'un, büyük Unicode karakter sınıfı tablolarını çekmek yerine 'yazdırılabilir' karakterler tanımlanmasının özel bir implementasyonuna sahiptir.
+
+**8. Paketler**
+
+Go' nun paket sisteminin tasarımı, kütüphanelerin bazı özelliklerini, *name space*'leri, ve modulleri içerir.
+Tüm Go kaynak dosyası, örneğin, *encoding/json/json.go*, **package** ifadesi ile başlar.
+
+```go
+package json
+```
+
+Burada *json* basit olarak paket ismidir. Paket isimleri genellikle kısa ve nettir.
+
+Bir paketi kullanmak için, paketi *import* eden kaynak dosyasının, paket'in yolunu import ifadesi içinde kullanması gerekiyor.
+Buradaki paket yolu ifadesi dil tarafında tanımlanmamıştır. Fakat pratik ve genel olarak *repository*'deki kaynak dosyasının *slash* ile ayrılmış dosya yolu kullanılır.
+
+```go
+import "encoding/json"
+```
+
+Sonrasında paket ismi kaynak dosyada dosya yolundan bağımsız şekilde kullanılır. Örneğin,
+
+```go
+var dec = json.NewDecoder(reader)
+```
+
+Bu tasarım daha anlaşılabilir bir yapı olmasına yardımcı olur. 
+
+Paketin yolunun *encoding/json* olmasına rağmen, paketin ismi *json*'dur.Standart *repository*'in dışında, genel anlayış proje isminin veya şirketin dosya yolunun en başına konulmasıdır.
+
+```go
+import "google/base/go/log"
+```
+
+Paket yollarının benzersiz olduğunu anlamak önemlidir.Ancak paket isimleri için böyle bir gereksinime ihtiyaç bulunmamaktadır. Paket yolu benzersiz olarak kaynak dosyaya *import* edilmesi gerekirken, paket ismi sadece genel bir isimlendirmedir. Bu isimlendirme paketi kullanacak kişilerin kendi kodlarında bu paketi nasıl kullanıcalarına bağlıdır.Paket isminin benzersiz olmasına gerek yoktur ve *import* edilen kaynak dosyası tarafından *import* ifadesi içindeki local bir tanımlayıcı ile ezilebilir.Örnekteki iki *import* ifadesi *package log*' u çağıran iki kaynak dosyasını çağırmaktadır.Fakat ikisini birlikte tek bir kaynak dosyasına *import* etmek istiyorsa, birini **locally** olarak yeniden isimlendirmesi gerekmetedir.
+
+```go
+import "log"                          // Standart paket
+import googlelog "google/base/go/log" // Google' a özel olarak tanımlanmış paket
+```
+
+Tüm şirketlerin kendi *log* paketleri olabilir.Fakat bunun için bu paketlere özgün isim vermelerine gerek yoktur.Buna ters olarak, Go'nun tasarımı paket isimlerinin çakışmasını dikkate alınmasından ziyade kısa ve net tutulmasını önerir.
+
+**9. *Remote* Paketler**
+
+Go' nun paket sisteminin bir diğer önemli özelliği ise paket yoludur.Genellikle isteğe bağlı bir string ile başlar veya farklı bir *repository*'e URL üzerinden erişebilir.
+
+Burada **doozer** paketinin github üzerinden nasıl kullanıldığı gösterilmektedir. Buradaki **go get** komutu **go build** aracını kullanarak repository'i tarar ve paketi indirir.Bir kez indirildiğinde herhangi bir paket gibi kullanılabilir.
+
+```console
+$ go get github.com/4ad/doozer // Shell command to fetch package
+```
+
+```go
+import "github.com/4ad/doozer" // Doozer client's import statement
+```
+```go
+var client doozer.Conn         // Client's use of package
+```
+
+Ek olarak **go get** komutunun bağımlıklılıkları yinelemeli olarak indirir.Ayrıca, *import* edilen paketlerin yollarının alan kullanımını URL'lere devredilir. Böylece paket isimlendirmelerini tekilleştirmez ve ölçeklenebilir hale getirir.
