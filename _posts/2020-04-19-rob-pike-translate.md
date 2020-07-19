@@ -296,3 +296,44 @@ func printAll(nums ...int) {
 ```
 
 **11. İsimlendirme**
+
+Go, bir değişkenin başka bir paket tarafından erişebilirliğini belirlemek için alışılagelmedik bir yaklaşım belirler.Örneğin, diğer dillerdeki gibi *private* veya *public* anahtar kelimeleri yerine, isimler erişilebilirliğine dair bilgiyi kendi içlerinde saklar. İlk harfin büyük veya küçük olma durumu değikenin erişilebilirliğini belirler.
+Eğer değişkenin isminin ilk harfi büyük ise değişken *public* yani diğer paketler tarafından erişilebilir hale gelir.
+
+-   İlk harf büyük ise **Name** örneğin, değişken diğer paketler için erişilebilir hale gelir.
+-   İlk harf küçük veya *underscore* ile başlıyorsa **name** veya **_Name** diğer paketler tarafından erişimi kısıtlandırılır.
+
+Bu kural aynı şekilde değişkenler, türler, fonksiyonlar, metotlar, sabitler için de geçerlidir.
+
+Bu durum bizim için kolay bir tasarım kararı değildi. Bir yıldan fazla bir süre değişkenin erişilebilirliğinin nasıl tanımlanacağı ile ilgili çalıştık. Sonunda bu kuralı dile yerleştirdiğimizde, kısa süre sonunda dilin en önemli özelliklerinden biri haline geldiğini farkettik.Bir süre GO'yu kullandıktan sonra başka bir dile geçildiğinde, erişilebilirlik bilgisini anlamanın daha külfetli hala geldiği kanısındayız.
+
+Buradan yine kaynak kodun programcı için açık ve anlaşılabilir olması sonucunu çıkarabiliriz.
+
+Bir başka sadeleştirme ise, Go'nun oldukça sıkı bir *scope* hiyerarşisine sahip olmasıdır:
+
+- global    (önceden tanımlanmış olan değişkenler örneğin *int* ve *string*)
+- paket     (paketin tüm kaynak kodları aynı *scope* içinde yer alır)
+- *file*    (yanlızca paket içinde *import* edilenler, pratikte çok önemli değil)
+- fonksiyon (alışılageldik bir şekilde)
+- *scope*   (alışılageldik bir şekilde)
+
+İsim alanı, sınıf veya diğer yapılar için bir *scope* bulunmamaktadır.Go'da isimler oldukça az yerden gelir, ve tüm isimler aynı *scope* hiyerşisini takip eder. Kaynak kodun içinde herhangi bir şekilde verilen bir lokasyonda, 
+bir değişken, nasıl kullanıldığından bağımsız olarak tam olarak bir dil nesnesini belirtir.(Buradaki tek istisna *statement label*' larıdır, *break statement*'larının hedefleri ve benzerleridir ve her zaman fonksiyon *scope*'unda yer alır)
+
+Bu durumun kodu daha okunabilir olmasına yol açar. Dikkat edilmesi gereken nokta, metodlar açık bir şekilde *receiver*'ını belirtir ve metodun tipine ve *field*'larına ulaşmak için mutlaka bu receiver methodun kullanılması gerekmektedir. Dilin üstü kapalı olarak tanımladığı *this* anahtar kelimesi yoktur. Bu yüzden her zaman şu şekilde yazılmalıdır.
+
+```go
+rcvr.Field
+```
+
+(Buradaki *rcvr* **receiver** değişkeni için seçilen isimdir)
+
+Böylece belirli bir tipin her öğesi sözcüksel olarak *receiver* tipinin değerine bağlıdır.Benzer olarak, paket niteliyicisi *import* edilen isimler için de her zaman bu şekilde kullanılır. Örneğin, *Reader* yazımı yerine *io.Reader* yazımı kullanılır. Aslında, standart kitaplıkta *Reader* için veya *Printf* adında birden fazla dışa aktarılan tanımlayıcı vardır.Yine de hangi değişkene atıfta bulunulduğu her zaman açıktır.
+
+Son olarak, bu tür kurallar, *int* gibi üst düzey önceden tanımlanmış adlar dışında, tüm isimlerin mevcut pakette tanımlanmasını garanti eder.
+
+Kısacası isimler yerel değişkenlerdir. C, C++ veya Java gibi dillerde *y* ismi herhangi bir şeye atıfta bulunabilir.Fakat Go'da *y* hatta *Y* her zaman mevcut paketin içinde tanımlanmalıdır. Bu şekilde *x.Y* anlaşılabilir olur. *x* yerel bir değişken olarak paket içinde bulunur ve *Y* *x*'e aittir.
+
+Bu kurallar ölçeklenebilirliğe fayda sağlar çünkü dışa aktarılmış bir ismi pakete dahil etmek hiçbir zaman pakette sorun yaşanmasına neden olmayacaktır.
+
+Bunlara ek olarak, tek bir tip aynı isimli iki metoda sahip olamaz.*x.M* metodu verildiğinde, yalnızca bir *M* *x* ile ilişkili olabilir. Tekrar etmek gerekirse, metod yanlıza bir isme atıfta bulanacağı için, bu durum tanımlamayı kolaylaştırır. Ayrıca metod çağrımını da basitleştirir.
