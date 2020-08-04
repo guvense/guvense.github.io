@@ -337,3 +337,94 @@ Kısacası isimler yerel değişkenlerdir. C, C++ veya Java gibi dillerde *y* is
 Bu kurallar ölçeklenebilirliğe fayda sağlar çünkü dışa aktarılmış bir ismi pakete dahil etmek hiçbir zaman pakette sorun yaşanmasına neden olmayacaktır.
 
 Bunlara ek olarak, tek bir tip aynı isimli iki metoda sahip olamaz.*x.M* metodu verildiğinde, yalnızca bir *M* *x* ile ilişkili olabilir. Tekrar etmek gerekirse, metod yanlıza bir isme atıfta bulanacağı için, bu durum tanımlamayı kolaylaştırır. Ayrıca metod çağrımını da basitleştirir.
+
+**12. Semantik - Anlambilim**
+
+Go semantik açıdan genel olarak C diline benzemektedir. Derlenmiş, statik tipli, *pointer*'ler içeren, prosedürel bir programlama dilidir. Tasarımsal açıdan, C ailesine alışık olan programcılar Go diline de aşinalığı bulunmaktadır. Yeni bir dil geliştirildiğinde, önemli olan noktalardan biri de hedef kitlenin bu dili kolay öğrenebilir olmasıdır. Go'yu C ailesine benzetmek,  Java, Javascript, C gibi diller üzerinde çalışmış olan programcılar için öğrenmesini kolaylaştırmıştır.
+
+Go, C sematiği üzerinde dile çok ufak değişiklikler gerçekleştirmiştir. Bu değişiklikler şu şekilde özetlenebilir:
+
+- *pointer* aritmetiği bulunmamaktadır
+- üstü kapalı sayısal dönüşümler yoktur
+- dizi boyutları ve aşımı daima kontrol edilir
+- tipler için takma isimler bulunmamaktadır (type alias)
+- ++ ve -- operatorleri *statement* olarak değerlendirilir *expression* olarak değerlendirilmez. *
+- Atama bir *expression* değildir. **
+
+
+Çevirmen notu:
+
+* Bri programlama dilinde *statement*  bir işlemi ifade eder toplama veya çıkarma gibi, *expression* ise bir değeri ifade eder. *Expression*'lar bir değer üretir. C'nin aksine GO' da bu arttrıma veya azaltma operatçrleri bir değer üretmezler, yani sonuçları başka bir değere atanamaz.
+
+
+C dilinde örnek verilmesi gerekirse;
+
+
+```C
+int main()
+{
+    int a = 10;
+    int b = a++;
+    printf("%d",b);
+    return 0;
+}
+```
+
+Bu kod bloğu derlendiğinde bir hata ile karşılaşılmayacaktır. Arttırma operatörü operantın sağ yanında bulunduğu için öncelikle 10 değeri b ye atanacak, ardından a bir arttırılıp 11 değerine erişecektir. C'de arttırma operatörü *expression* yani değer üreten ifade olduğu için yazdığımız kod derlenecektir.
+
+Şimdi aynı durumu Go da örneklendirelim.
+
+```go
+int main()
+{
+   number := 1
+   increasedNumber:= number++
+   fmt.Println(increasedNumber)
+}
+```
+
+Bu durumda *number++* ifadesi *expression* olmadığı göz önüne alındığında, değer üretmeyeceği için bu işlemin sonucunun bir değişkene atanması derleme zamanı hatasına neden olacaktır.
+
+** Yukarda tanımlandığı üzere *expression*'lar bir değer üretir. C'de atama operatörü bir değer üretirken Go'da atama operatörleri değer üretmez.
+
+C dilinde yazılmış olan aşağıdaki kodu inceleyelim.
+
+```C
+int main()
+{
+   int a = 10;
+   int p;
+   int t = (p=a);
+   printf("%d", t);
+    
+   return 0;
+}
+```
+
+Yukarda tanımlanan atama operatörü ile atanan değer geri dönüş değeri olarak t değerine atanır. Bu durumda 10 değerinin çıktısı alınır. Yani C'de atama operatörü *expression* olduğu için bir değer üretir.
+
+Go'da aynı örneği incelersek;
+
+
+```go
+int main()
+{
+    number := 1
+	var number2 int
+	t := number = number2
+	fmt.Println(t)
+}
+```
+
+Yukarıdaki kod ise Go'da çalışmaz. Atama operatörü *expression* olmadığı için değer üretmez, değer üretilmediği içinde bu işlemin sonucu başka bir değere atanamaz.
+
+
+Geleneksel C, C ++ ve hatta Java modellerinden çok farklı olan bazı daha büyük değişiklikler de Go'da bulunmaktadır. Aşağıdaki özelliklere dil kendisi destek vermektedir.
+
+- Eşzamanlılık 
+- *Garbage Collection*
+- *interface* türleri
+- *reflection*
+- [Type switches](https://tour.golang.org/methods/16)
+
+Bir sonraki bölümlerde yukarıda bahsedilen *concurrency* ve *garbage collection* özellikleri ile ilgili yazılım mühendisliği bakış açısı ile kısaca bahsedilecektir. Daha detaylı bilgi için [GO!](https://golang.org/)
