@@ -428,3 +428,28 @@ Geleneksel C, C ++ ve hatta Java modellerinden çok farklı olan bazı daha büy
 - [Type switches](https://tour.golang.org/methods/16)
 
 Bir sonraki bölümlerde yukarıda bahsedilen *concurrency* ve *garbage collection* özellikleri ile ilgili yazılım mühendisliği bakış açısı ile kısaca bahsedilecektir. Daha detaylı bilgi için [GO!](https://golang.org/)
+
+**13. Eşzamanlılık - Concurrency**
+
+Birden fazla çekirdeğe ve istemciye sahip olan modern bilgisayar sistemleri için *concurrency* önemli bir konudur. C++ veya Java ile yazılmış programların  eşzamanlılık konusunda başarılı olduğunu söylenemez. Bunun nedeni, bu dillerin, dil seviyesinde bu alana yeterince destek vermemiş olmasıdır.
+
+Çevirmen notu:
+"
+Daha fazla ilerlemeden *concurrency*'i nedir bir gözden geçirelim.
+
+Bu kelimeyi ingilizce olarak kullanmaya özen gösterdim. Nedeni Türkçe çevirisinin karmaşaya yol açması olduğunu düşüyorum. 
+
+*Concurrent* çalışan bir uygulamada tasklar aynı aynda işlenir. Örneğin kullanıcı concurrenct bir uygulamada hem müzik dinleyebilir hemde istediği başka bir müziği aynı anda internetten indirebilir. 
+Makine üzerinde tek bir işlemci olduğunda ise bu tasklar aynı anda işlenemeyeceği için işlemci üzerinde işlenen tasklar arasında gözle gözlemlenemeyecek hızlarda değişim gerçekleşir. Bu değişimleri kullanıcı fark edemeyeceği için aynı anda işlem yapılıyor yanılgısına düşecektir.
+
+"
+
+
+
+
+
+
+
+
+
+
