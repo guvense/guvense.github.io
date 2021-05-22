@@ -104,12 +104,12 @@ Dağıtılmış derleme sistemi ile birlikte düşünülecek olsa dahi, büyük 
 
 **6. Go'ya Giriş**
 
-Derleme yavaşladığında, bu konu hakkında kafa yormanın zamanı gelmiştir. Go'nun kökeniyle ilgili, 45 dakikalık bir derleme sürecinde go fikrinin ortaya çıktığına dair söylenen bir efsane vardır. Sonuç olarak Google Web Servisleri gibi programlar için yazılacak olan yeni bir dilin tasarlanmasının gerektiği ortaya çıktı. Bu dilde Google programcılarının hayatını kolaylaştıracağı ortada olduğu görüldü.
+Derleme yavaşladığında, bu konu hakkında kafa yormanın zamanı gelmiştir. Go'nun kökeniyle ilgili, 45 dakikalık bir derleme sürecinde go fikrinin ortaya çıktığına dair söylenen bir efsane vardır. Sonuç olarak Google Web Servisleri gibi programlar için yazılacak olan yeni bir dilin tasarlanmasının gerektiği ortaya çıktı. Bu dilde Google programcılarının hayatını kolaylaştıracağı net olarak görüldü.
 
 Şimdiye kadar tartışma bağımlılıklara odaklanmış olsa da, dikkat edilmesi gereken birçok konu var.Herhangi bir dilin bu bağlamda başarılı olması için dikkat edilmesi gereken başlıca noktalar şunlardır:
 
 - Büyük programlar ve çok sayıda programcıdan oluşan takımları ile ölçeklenebilir olmalıdır
-- Kabaca C gibi bilindik olmalıdır. Google daki daha kariyerinin başındaki programcılar daha çok prosedürel yazılım dillerine aşinadır özellikle C ailesinden olan yazılım dilleri ile. Bu yüzden bu tür programcıların yeni bir dile hızlıca aşina olmaları için dilin çokda radikal olmaması gerekir.
+- Kabaca C gibi bilindik olmalıdır. Google daki daha kariyerinin başındaki programcılar daha çok prosedürel yazılım dillerine aşinadır özellikle C ailesinden olan yazılım dilleri ile. Bu yüzden bu tür programcıların yeni bir dile hızlıca aşina olmaları için dilin çokta radikal olmaması gerekir.
 - Modern olmalıdır, C, C++ ve bazı yönlerinden Java oldukça eskidir. Ve bu tarz programlama dilleri, çok sayıda çekirdekten oluşan makinelerden, *networking*'den ve web uygulamaları geliştirmesinden önce tasarlanmıştır. Modern dünyanın *built-in concurrency* gibi daha yeni yaklaşımlarla daha iyi karşılanan özellikleri olmalıdır.
 
 Bunlardan yola çıkarak, Go'nun tasarımına yazılım mühendisliği perspektifinden bakalım.
@@ -128,11 +128,11 @@ Go'yu ölçeklendirmedeki ilk adım, *dependency-wise* olarak tanımlanan kullan
 
 Bir diğer adım ise, *compiler* olarak tanımlanan Go kodunu makine koduna çeviren aracın verimliliği garanti etmesidir. 3 paketli Go programı ve bağımlık grafiğine bir göz atalım: 
 
-- paket A paket B yi import ediyor *A imports B*
-- paket B paket C yi import ediyor *B imports C*
-- paket A paket C yi import **etmiyor** 
+- paket A, paket B yi import ediyor *A imports B*
+- paket B, paket C yi import ediyor *B imports C*
+- paket A, paket C yi import **etmiyor** 
 
-Bu durum A paketinin C paketini B paketi aracı ile dolaylı olarak kullandığı anlamına gelmektedir.A'da kullanılar bazı ifadeler B nin C den aldığı ifadeleri kullanıyor olsa bile, A' nın kaynak kodunda C paketi ile ilgili herhangi bir tanımlayıcı bulunmayacaktır. Örnek vermek gerekise, A B'de bulunan bir üyesi C den gelen bir *struct*' ı referans alıyor olabilir. Fakat A o üyeyi referans almayacaktır. Daha açıklayıcı bir örnek vermek gerekirse, A' nın B den *formatted I/O* paketi *import* ettiğini düşünelim. Fakat B bu import edilmiş paketi C'den aldığı *buffered I/O* implementasyonunu olarak kullanmaktayken, A kendisi  *buffered I/O* paketini kullanmayacaktır.
+Bu durum A paketinin C paketini B paketi aracı ile dolaylı olarak kullandığı anlamına gelmektedir.A'da kullanılar bazı ifadeler B nin C den aldığı ifadeleri kullanıyor olsa bile, A' nın kaynak kodunda C paketi ile ilgili herhangi bir tanımlayıcı bulunmayacaktır. Örnek vermek gerekise, A, B'de bulunan bir üyesi C den gelen bir *struct*' ı referans alıyor olabilir. Fakat A o üyeyi referans almayacaktır. Daha açıklayıcı bir örnek vermek gerekirse, A' nın B den *formatted I/O* paketi *import* ettiğini düşünelim. Fakat B bu import edilmiş paketi C'den aldığı *buffered I/O* implementasyonunu olarak kullanmaktayken, A kendisi  *buffered I/O* paketini kullanmayacaktır.
 
 Böyle bir programı *build* etme süreci şu şekilde işleyecektir. Öncelikle C derlenecek, bağımlı paketler kendilerine bağımlı paketlerden önce oluşturulmalıdır. Sonra B derlenir, son olarak A derlenir ve daha sonra *link* denilen bir şekilde birbirlerine bağlanırlar.
 
@@ -145,20 +145,20 @@ Bu ifade ile B'nin *object* dosyası okunur ve gerkeli bilgiler A'ya aktarılır
 
 Derleyici *import* ifadesi ile, ifadenin içine yer alan *string* şeklinde tanımlanan yalnızca bir *object* dosyası çalıştırır. Bu, elbette, bağımlılık yönetimine yönelik *Plan 9 C* (ANSI C'nin aksine) yaklaşımını hatırlatır, ancak aslında, derleyici, Go kaynak dosyası derlendiğinde **header** dosyasını yazacaktır. Bu süreç *Plan 9*'dan daha otomatik ve daha verimlidir. Buna ek olarak veri okunurken, *import* ifadesi değerlendirlirken yanlızca "dışarıya aktarılan" bilgi eklenir, programın genel kaynak kodu eklenmez. Genel derleme süresi üzerindeki etki çok büyük olabilir ve kod tabanı büyüdükçe ölçeklenecektir. Bağımlılık grafiğinin yürütülmesi ve dolayısıyla derlenmesi için gereken süre, C ve C ++ 'ın "*include of include file*" modelinden çok daha az olabilir.
 
-Ek olarak, bu bağımlık yönetime yönelik olan genel yaklaşımın orjinal olmadığını vurgulamak gerekir. Bu fikir, 1970'lere kadar gitmektedir ve Modula-2 ve Ada gibi diller bu yaklaşımı kullanır. C ailesinde ise Java bu yaklaşıma ait  öğeler içerir.
+Ek olarak, bu bağımlık yönetime yönelik olan genel yaklaşımın orjinal olmadığını vurgulamak gerekir. Bu fikir, 1970'lere kadar gitmektedir ve Modula-2 ve Ada gibi diller bu yaklaşımı kullanır. C ailesinde ise Java bu yaklaşıma ait öğeler içerir.
 
 Derleme sürecini daha verimli hale getirmek için, *object* dosyasındaki dışa aktarılacak veri ilk olacak şekilde ayarlanabilir. Böylece derleyici bu bölümün sonuca ulaştığında okumayı sonlandırabilir.
 
 Bağımlılık yönetimine bu yaklaşım, Go derlemelerinin C veya C ++ derlemelerinden daha hızlı olmasının en büyük nedenidir. Başka bir faktör, Go'nun dışa aktarma verilerini *object* dosyasına yerleştirmesidir; bazı diller yazarın yazmasını veya derleyicinin bu bilgileri içeren ikinci bir dosya oluşturmasını gerektirir. Bu durum çok fazla dosyanın iki kez açılmasına neden olacaktır. Go'da ise paketin *import* edilmesi için yalnızca bir dosya vardır. Ayrıca, tek dosya yaklaşımı, dışa aktarılacak verilerinin (veya C / C ++ 'da *header* dosyasının) hiçbir zaman *object* dosyasına göre güncelliğini yitiremeyeceği anlamına gelir.
 
 Kaynak kodun nasıl açıldığını görmek amacıyla, önceden C++ ile yazılmış büyük çaplı bir Google programını Go ile yazılmış sürümünün derleme sürecini ölçtük. Yaklaşık 40X, C ++ 'dan elli kat daha iyi (ve daha basit ve dolayısıyla daha hızlı işlenme ) olduğunu bulduk, ancak yine de beklediğimizden daha büyük oldu.
-Bunun iki nedeni var. İlk olarak bir hata bulduk: Go derleyicisi, dışa aktarma bölümünde bulunması gerekmeyen önemli miktarda veri üretiyordu. İkincisi, dışa aktarma verileri, geliştirilebilecek karmaşık kodlama kullanıyordu. Bu sorunları ele almayı planlıyoruz.
+Bunun iki nedeni var. İlk olarak bir hata bulduk: Go derleyicisi, dışa aktarma bölümünde bulunması gerekmeyen önemli miktarda veri üretiyordu. İkincisi, dışa aktarma verileri, geliştirilebilecek karmaşık kodlamalar kullanıyordu. Bu sorunları ele almayı planlıyoruz.
 
 Her şeye rağmen, yapılacak elli katlık bir etki, dakikaları saniyeye çevirir.
 
 Go bağımlık grafiğinin bir başka özelliği ise döngüsel olmamasıdır. Dil, grafikte dairesel bir içe aktarma yapılamayacağını tanımlar.Ek olarak, derleyici ve *linker* her birinin var olup olmadığını kontrol eder. Ara sıra yararlı olmalarına rağmen, dairesel *import*'lar ölçeklenmede önemli sorunlar yaratmaktadır. Derleyicinin daha büyük kaynak dosyaları ile aynı anda ilgilenmesini gerektirir ve bu da artış gösteren derlemeleri yavaşlatır. 
 
-Dairesel *import*'lar bazen sorun çıkmasına neden olabilir. Fakat *tree*'yi temiz tutar ve paketler arasında düzgün bir sınır oluşmasını gerektirir. Go'daki tasarım kararlarının çoğunda olduğu gibi, programcıyı öncesinde büyük ölçeklenme sorununu düşünmeye iter. Bu durum daha sonraya bırakılırsa hiçbir zaman tatmin edici bir şekilde ele alınamaz. Standart kütüphanenin tasarımı süresince, bağımlılıkları kontrol edilmesi için büyük çaba harcandı. Küçük bir kodu kopyalamak, bir fonksiyon için büyük bir kütüphaneyi çekmek yerine daha sağlıklı olabilir. Bağımlıkların bu şekilde temiz tutulması kodun yeniden kullanılabilir hale getirecektir. Uygulamada bunun bir örneği olarak, (düşük seviyeli) net paketin, daha büyük ve *dependency-heavy* biçimlendirilmiş I/O paketine bağlımlı hale gelmemek için kendi tamsayıdan ondalığa dönüştürme implementasyonuna sahip olması verilebilir.Başka bir örnek ise, "String" dönüştürme paketi olan **strconv**'un, büyük Unicode karakter sınıfı tablolarını çekmek yerine 'yazdırılabilir' karakterler tanımlanmasının özel bir implementasyonuna sahiptir.
+Dairesel *import*'lar bazen sorun çıkmasına neden olabilir. Fakat dallanmayı temiz tutar ve paketler arasında düzgün bir sınır oluşmasını gerektirir. Go'daki tasarım kararlarının çoğunda olduğu gibi, programcıyı öncesinde büyük ölçeklenme sorununu düşünmeye iter. Bu durum daha sonraya bırakılırsa hiçbir zaman tatmin edici bir şekilde ele alınamaz. Standart kütüphanenin tasarımı süresince, bağımlılıkları kontrol edilmesi için büyük çaba harcandı. Küçük bir kodu kopyalamak, bir fonksiyon için büyük bir kütüphaneyi çekmek yerine daha sağlıklı olabilir. Bağımlıkların bu şekilde temiz tutulması kodun yeniden kullanılabilir hale getirecektir. Uygulamada bunun bir örneği olarak, (düşük seviyeli) net paketin, daha büyük ve ağır bir bağımlılık olarak biçimlendirilmiş I/O paketine bağlımlı hale gelmemek için kendi tamsayıdan ondalığa dönüştürme implementasyonuna sahip olması verilebilir.Başka bir örnek ise, "String" dönüştürme paketi olan **strconv**'un, büyük Unicode karakter sınıfı tablolarını çekmek yerine 'yazdırılabilir' karakterler tanımlanmasının özel bir implementasyonuna sahiptir.
 
 **8. Paketler**
 
@@ -223,9 +223,9 @@ Ek olarak **go get** komutunun bağımlıklılıkları yinelemeli olarak indirir
 
 **10. Sentaks**
 
-Sentaks bir programlama dilinin kullanıcı arayüzüdür. Sentaks'ın dilin semantiği üzerinde etkisi pek olmasada okunabilirlik ve anlaşılabilirlik anlamında önemli bir etkiye sahiptir.Ayrıca, dilin ayrıştırılması zorsa, *automated* araçların yazılımı da aynı şekilde zordur.
+Sentaks bir programlama dilinin kullanıcı arayüzüdür. Sentaks'ın dilin semantiği üzerinde etkisi pek olmasada okunabilirlik ve anlaşılabilirlik anlamında önemli bir etkiye sahiptir.Ayrıca, dilin ayrıştırılması zorsa, otonom araçların yazılımı da aynı şekilde zordur.
 
-Bu yüzden Go'nun tasarım süreci anlaşılabilirlik üzerine kurulmuştur.Bu anlayış Go'ya anlaşılabilir bir sentaks kazandırmıştır. C ailesine ait diğer diller ile karşılaştırıldığında, dilbilgisi açısından, yalnızca 25 anahtar kelime ile, en sade ve az anahtar kelime sayısına sahiptir. (C99 37, C++11 84 ve bu sayılar büyümeye devam etmektedir). Dahada önemlisi, dilbilgisi düzenli olduğu için kolayca ayrıştırılabilir.(Çoğunlukla *fix*'leyebileyeceğimiz ancak yeterince erken bulamadığımız tuhaflıklar da mevcuttur). C, Java ve özellikle C++' ın aksine, Go tip bilgisi veya sembol tablosu olmadan ayrıştırılabilir. Burada tip bağımlı içerik bulunmamaktadır. Dil bilgisinin anlamlandırmak kolaydır, araçların yazımını kolaylaştırır.
+Bu yüzden Go'nun tasarım süreci anlaşılabilirlik üzerine kurulmuştur.Bu anlayış Go'ya anlaşılabilir bir sentaks kazandırmıştır. C ailesine ait diğer diller ile karşılaştırıldığında, dilbilgisi açısından, yalnızca 25 anahtar kelime ile, en sade ve az anahtar kelime sayısına sahiptir. (C99 37, C++11 84 ve bu sayılar büyümeye devam etmektedir). Dahada önemlisi, dilbilgisi düzenli olduğu için kolayca ayrıştırılabilir.(Çoğunlukla düzeltebileceğimiz ancak yeterince erken bulamadığımız tuhaflıklar da mevcuttur). C, Java ve özellikle C++' ın aksine, Go tip bilgisi veya sembol tablosu olmadan ayrıştırılabilir. Burada tip bağımlı içerik bulunmamaktadır. Dil bilgisinin anlamlandırmak kolaydır, araçların yazımını kolaylaştırır.
 
 C programcılarını şaşırtan bir detay da Go sentaksının C' den ziyade Paskala benzemesidir. Tanımlanan isim türden önce gelir ve birden fazla anahtar kelime içerir:
 
@@ -267,6 +267,9 @@ func (x T) Abs() float64
 ```
 
 Burada T argumanlı bir variable bulunmaktadır. Go'da fonksiyonlar *first-class* üyedir.
+
+
+Çevirmen notu:
 *first-class*: Fonksiyonel programlamanın temel kavramlarından biri olan bu özellik, foksiyonlarında değişkenler gibi başka bir fonksiyona parametre olarak geçilebilceğini veya başka bir fonksiyonun dönüş değeri olabileceği anlamına gelir.
 
 
@@ -285,6 +288,22 @@ if err != nil { ... }
 Daha sonra hatalar hakkında konuşmaya devam edeceğiz.
 
 Go'da eksik olan özelliklerden biride *default* fonksiyon argumanlarını desteklemiyor oluşudur. Bu durumun nedeni dilin tasarımını sadeleştirmektir. Deneyimlerimizden yola çıkarak *default* argumanların, daha fazla arguman ekleyerek API tasarımının oluşturduğu kusurları düzeltmeyi kolaylaştırdığını görüyoruz. Fakat bu durumun sonucunda çözümlenmesi hatta analaşılması zor etkileşimli argumanlar ortaya çıkacaktır. *Default* argumanların eksikliğinde bir fonksiyonun tüm API  arayüzünü desteklemeyeceği için daha fazla metot veya fonksiyon tanımlaması gerekecektir. Fakat bu durum daha temiz ve anlaşılabilir bir API oluşturulmasına yardım edecektir. Ek olarak bu fonksiyonlar isimlere göre ayrılacağı için hangi parametrenin hangi fonksiyonda var olduğu da isme göre rahatça anlaşılacaktır. Bu durum, netliğin ve okunabilirliğin önemli bir parçası olan *isimlendirmenin* üzerine düşülmesine teşvik edecektir. 
+
+Çevirmen notu:
+Default argumanlarını bir Python kodu ile örnekleyelim
+
+```python
+
+def student(firstname, lastname ='Dylan'):
+ 
+     print(firstname, lastname)
+
+student("Bob")  # -> Bob Dylan
+student("Bob", "Joe")  # -> Bob Joe
+```
+
+Burada görüldüğü gibi methota ikinci parametreyi geçmezsek, ikinci arguman hazır olarak tanımlanmış değeri alacaktır.
+
 
 *Default* argumanların olmamasının bir hafifletici sonucuda, Go'nun kullanımı kolay, *type-safe* olan *variadic* fonksiyonlara desteği olmasıdır. 
 
@@ -318,8 +337,7 @@ Bir başka sadeleştirme ise, Go'nun oldukça sıkı bir *scope* hiyerarşisine 
 - fonksiyon (alışılageldik bir şekilde)
 - *scope*   (alışılageldik bir şekilde)
 
-İsim alanı, sınıf veya diğer yapılar için bir *scope* bulunmamaktadır.Go'da isimler oldukça az yerden gelir, ve tüm isimler aynı *scope* hiyerşisini takip eder. Kaynak kodun içinde herhangi bir şekilde verilen bir lokasyonda, 
-bir değişken, nasıl kullanıldığından bağımsız olarak tam olarak bir dil nesnesini belirtir.(Buradaki tek istisna *statement label*' larıdır, *break statement*'larının hedefleri ve benzerleridir ve her zaman fonksiyon *scope*'unda yer alır)
+İsim alanı, sınıf veya diğer yapılar için bir *scope* bulunmamaktadır.Go'da isimler oldukça az yerden gelir, ve tüm isimler aynı *scope* hiyerşisini takip eder. Kaynak kodun içinde herhangi bir şekilde verilen bir lokasyonda, bir değişken, nasıl kullanıldığından bağımsız olarak tam olarak bir dil nesnesini belirtir.
 
 Bu durumun kodu daha okunabilir olmasına yol açar. Dikkat edilmesi gereken nokta, metodlar açık bir şekilde *receiver*'ını belirtir ve metodun tipine ve *field*'larına ulaşmak için mutlaka bu receiver methodun kullanılması gerekmektedir. Dilin üstü kapalı olarak tanımladığı *this* anahtar kelimesi yoktur. Bu yüzden her zaman şu şekilde yazılmalıdır.
 
@@ -337,7 +355,7 @@ Kısacası isimler yerel değişkenlerdir. C, C++ veya Java gibi dillerde *y* is
 
 Bu kurallar ölçeklenebilirliğe fayda sağlar çünkü dışa aktarılmış bir ismi pakete dahil etmek hiçbir zaman pakette sorun yaşanmasına neden olmayacaktır.
 
-Bunlara ek olarak, tek bir tip aynı isimli iki metoda sahip olamaz.*x.M* metodu verildiğinde, yalnızca bir *M* *x* ile ilişkili olabilir. Tekrar etmek gerekirse, metod yanlıza bir isme atıfta bulanacağı için, bu durum tanımlamayı kolaylaştırır. Ayrıca metod çağrımını da basitleştirir.
+Bunlara ek olarak, tek bir tip aynı isimli iki metoda sahip olamaz.*x.M* metodu verildiğinde, yalnızca bir *M*, *x* ile ilişkili olabilir. Tekrar etmek gerekirse, metod yanlıza bir isme atıfta bulanacağı için, bu durum tanımlamayı kolaylaştırır. Ayrıca metod çağrımını da basitleştirir.
 
 **12. Semantik - Anlambilim**
 
@@ -355,7 +373,7 @@ Go, C sematiği üzerinde dile çok ufak değişiklikler gerçekleştirmiştir. 
 
 Çevirmen notu:
 
-* Bri programlama dilinde *statement*  bir işlemi ifade eder toplama veya çıkarma gibi, *expression* ise bir değeri ifade eder. *Expression*'lar bir değer üretir. C'nin aksine GO' da bu arttrıma veya azaltma operatçrleri bir değer üretmezler, yani sonuçları başka bir değere atanamaz.
+* Bir programlama dilinde *statement*  bir işlemi ifade eder toplama veya çıkarma gibi, *expression* ise bir değeri ifade eder. *Expression*'lar bir değer üretir. C'nin aksine GO' da bu arttırma veya azaltma operatorleri bir değer üretmezler, yani sonuçları başka bir değere atanamaz.
 
 
 C dilinde örnek verilmesi gerekirse;
