@@ -12,23 +12,24 @@ comments: true
 
 Bu yazı Rob Pike tarafından _SPLASH 2012_ konderansında verilen konuşmanın önemli noktalarının derlenmesidir.
 
-Go programlama dili Google altyapısındaki bazı sorunlara çözüm bulmak amacıyla 2007 yılının sonlarında tasarlanmıştır. Günümüz bilgisayar donanımları, çoğunlukla kullanılan C++, Java ve Python ile uyumlu değildir. _Multicore processors, Networked systems, Massive computation clusters ve web programming_ gibi teknolojilerin getirdiği sorunlara, doğru çözümlerin bulunmasından ziyade günü kurtaracak çözümler sunulmaktadır. Ayrıca uygulamaların ölçeklenebilirliği değişmekte, günümüz sunucu taraflı programları on milyonlarca kod satırından oluşmakta.Ve bu uygulamalar yüzlerce hatta binlerce programcı tarafından neredeyse her gün güncellenmekte. Ne yazık ki, derleme zamanı, gelişmiş _compilation cluster_ 'da bile, dakikalara hatta saatlere kadar uzadı.
+Go programlama dili Google altyapısındaki bazı sorunlara çözüm bulmak amacıyla 2007 yılının sonlarında tasarlanmıştır. Günümüz bilgisayar donanımları, çoğunlukla kullanılan C++, Java ve Python ile uyumlu değildir. _Multicore processors, Networked systems, Massive computation clusters ve web programming_ gibi teknolojilerin getirdiği sorunlara, doğru çözümlerin bulunmasından ziyade günü kurtaracak çözümler sunulmaktadır. Ayrıca uygulamaların ölçeklenebilirliği değişmekte, günümüz sunucu taraflı programları on milyonlarca kod satırından oluşmakta.Ve bu uygulamalar yüzlerce hatta binlerce programcı tarafından neredeyse her gün güncellenmektedir. Ne yazık ki, derleme zamanı, gelişmiş _compilation cluster_ 'da bile, dakikalara hatta saatlere kadar uzadı.
 
-Go bu _environment_ içinde çalışmayı daha üretken hale getirmek için tasarlandı. _Built-in concurrency_ ve _garbage collection_ gibi iyi bilinen yönlerinin yanı sıra, GO'nun tasarımı iyi hazırlanmış bağımlılık yönetimi, sistemin büyümesine göre adapte olabilen yazılım mimarisi ve uygulama parçaları arasındaki sağlam sınırlandırılmalara dayanmaktadır.
+Go bu _environment_ içinde çalışmayı daha üretken hale getirmek için tasarlandı. _Built-in concurrency_ ve _garbage collection_ gibi iyi bilinen yönlerinin yanı sıra, GO'nun tasarımı iyi hazırlanmış bağımlılık yönetimi, sistemin büyümesine göre adapte olabilen yazılım mimarisi ve uygulama parçaları arasındaki sağlam sınırlara dayanmaktadır.
 
-Bu makalede amaçlanan, bu gibi sorunların hafif ve uygun bir programlama dili tasarlanırken nasıl ele alındığını açıklamaktır. Google'da karşılaşılan sektöre dayalı sorunlardan örnekler ve açıklamalar aktarılıcaktır.
+Bu makalede amaçlanan, bu gibi sorunların uygun bir programlama dili tasarlanırken nasıl ele alındığını açıklamaktır. Google'da karşılaşılan sektöre dayalı sorunlardan örnekler ve açıklamalar aktarılıcaktır.
 
 **2. Giriş**
 
 GO dili, Google tarafından geliştirilen, derlenen, eşzamanlı, _garbage-collected_, statik tipli bir programlama dilidir. Açık kaynak olarak sunulur.
 
-Go programlama dili, verimli, ölçeklenebilir ve üretkendir. Bazı programcılar Go ile çalışırken keyif alırken, diğerleri sığ ve hatta sıkıcı bulabilir.Bu makalede, bu gibi durumların neden çelişki barındırmadığını açıklayacağız. Go, Google' da yazılım geliştirme alanında karşılaşılan sorunlara çözüm bulmak amacıyla tasarlandı. Ve bu süreç sonunda, çığır açan bir araştırma dili olmasa da, büyük yazılım projeleri için mükemmel bir araç olan bir dilin geliştirilmesine yol açtı.
+Go programlama dili, verimli, ölçeklenebilir ve üretkendir. Bazı programcılar Go ile çalışırken keyif alırken, diğerleri sığ ve hatta sıkıcı bulabilir.Bu makalede, bu gibi durumların neden çelişki barındırmadığını açıklayacağız. 
+Go, Google' da yazılım geliştirme alanında karşılaşılan sorunlara çözüm bulmak amacıyla tasarlandı. Ve bu süreç sonunda, çığır açan bir araştırma dili olmasa da, büyük yazılım projeleri için mükemmel bir araç olan bir dilin geliştirilmesine yol açtı.
 
 **3. Google' da Go**
 
-Go programlama dili Google tarafından Google'ın problemlerine çözüm bulması amacıyla geliştirildi. Ve Google'ın ciddi anlamda büyük problemlemleri bulunmaktadır.
+Go programlama dili Google tarafından Google'ın problemlerine çözüm bulması amacıyla geliştirildi. Ve Google ciddi anlamda büyük problemler ile karşılaşmaktadır.
 
-Donanım ve yazılım karmaşık ve büyüktür. C++ ve çoğunlukla Java ve Python ile yazılmış milyonlarca satır yazılım bulunmaktadır. Binlerce mühendis büyük bir parça olan bu yazılım sisteminin yalnızca tek bir parçası üzerinde çalışır. Bu nedenle bu sistem içinde günden güne önemli değişiklikler meydana gelir. [Custom-designed distributed build system](http://google-engtools.blogspot.com/2011/06/build-in-cloud-accessing-source-code.html)
+Donanım ve yazılım karmaşık ve büyüktür. C++ ve çoğunlukla Java ve Python ile milyonlarca satır yazılım kodu yazılmıştır. Binlerce mühendis büyük bir parça olan bu yazılım sisteminin yalnızca tek bir parçası üzerinde çalışır. Bu nedenle bu sistem içinde günden güne önemli değişiklikler meydana gelir. [Custom-designed distributed build system](http://google-engtools.blogspot.com/2011/06/build-in-cloud-accessing-source-code.html)
 geliştirmeyi ölçeklenebilir kılsada, hala sistem karmaşık ve büyüktür.
 
 Ve elbette, tüm bu yazılım, az sayıda bağımsız, ağa bağlı işlem kümesi olarak kabul edilen zilyonlarca makine üzerinde çalışır.
@@ -58,9 +59,9 @@ Go duyurulduğunda, bazıları tarafından gelişmiş dillerde olması gereken �
 - Otomatik araçların yazım zorluğu
 - Karışık dil derlenmesi
 
-Bir dilin asli özellikleri bu sorunları ele almaz. Yazılım mühendisliğine daha geniş bir bakış açısı gerektiği açıktır. Ve Go'nun tasarımında bu sorunların çözümlerine odaklanmaya çalışılmıştır.
+Bir dilin asli özellikleri bu sorunları ele almaz. Yazılım mühendisliğine daha geniş bir bakış açısı gerektiği açıktır. Ve Go'nun tasarımında bu sorunların çözümlerine odaklanılmaya çalışılmıştır.
 
-Basit olarak, örneğin, program yapısının bir örneğini göz önünde bulundurun. Bazıları Go'nun C türü süslü parantezlerle sağlanan blok yapısına, Python veya Haskell deki gibi boşlukların kullanılması gerektiğini düşünerek itiraz ettiler. Fakat, biz diller arası yapıların neden olduğu derleme ve test hatalarını izleme konusunda geniş deneyime sahibiz. Örneğin, başka bir dilde, örneğin bir SWIG çağırma yoluyla gömülü olan Python snippet'i, çevreleyen kodun girintisindeki bir değişiklik nedeniyle dikkatten kaçan ve görünmez bir şekilde bozulmuştur.
+Basit olarak, örneğin, program yapısının bir örneğini göz önünde bulundurun. Bazıları Go'nun C türü süslü parantezlerle sağlanan blok yapısına, Python veya Haskell deki gibi boşlukların kullanılması gerektiğini düşünerek itiraz ettiler. Fakat, biz diller arası yapıların neden olduğu derleme ve test hatalarını tespit etme konusunda geniş deneyime sahibiz. Örneğin, başka bir dilde, örneğin bir SWIG çağırma yoluyla gömülü olan Python snippet'i, çevreleyen kodun girintisindeki bir değişiklik nedeniyle dikkatten kaçan ve görünmez bir şekilde bozulmuştur.
 Bizim bu duruma karşı bakış açımız, girinti için boşlukların kullanılması küçük programlar için daha sağlıklı olsada, ölçeklenebilir değil ve daha büyük ve karışık kod üzerinde, daha fazla sorun yaratabilir. Güvenlik ve güvenilirlik açısından kolaylıktan vazgeçmek daha iyidir, bu nedenle Go'nun küme parantezle oluşturulmuş blokları vardır.
 
 **5. C ve C++ daki Bağımlılıklar**
@@ -91,13 +92,13 @@ Teknik konuşmak gerekirse, bu duruma bir çözüm bulunabilir. _#ifndef_ koruma
 
 **Plan 9** yaklaşımımın en önemli sonucu daha hızlı bir derleme sürecidir. Toplam I/O işlemleri *#ifndef* koruyucularının kullanılmasına göre önemli miktarda azaldı. 
 
-**Plan 9**'un dışında koruyucular C ve C++ için kabul edilen bir tasarımdır. Aslında, C ++ daha detaylı şekilde aynı yaklaşımı kullanarak sorunun daha da kötüleşmesine yol açar. Tasarımsal olarak, C++ programları genel olarak her bir *class* veya birden fazla küçük çaplı class başına bir header dosyası olarak tasarlanmıştır. Örnek olarak *< stdio.h >*'ı alabiliriz. Böylece bağımlılık ilişkisi daha da karmaşık hale gelmiş. Kütüphane bağımlılığında ziyade tür hiyerarşisini yansıtır hale gelmiştir. Buna ek olarak, C++ daki header dosyaları basit sabit ve fonksiyon tanımlamalarından ziyade gerçek kod olarak tanımlanan type, method ve template declaration içerir. Böylece, C++ derleyiciye derlenmesi zor olan kodu yollamakla kalmaz, derleyici her çağrıldığında bu bilgiyi yeniden işlemek durumunda kalır. Büyük çaplı bir C++ binary'si derlendiğinde, derleyici binlerce kez *< string >* header dosyasına göre string ifadesini nasıl tanımlayacağını anlamaya çalışır. (Bir kayda göre, 1984 yılları civarında Tom Cargill tarafından gözlenen bağımlık yönetimi için C önişlemcisinin kullanılması durumunda, C++ için uzun vadede bir dezavantaj olucağı dile getirildi.)
+**Plan 9**'un dışında koruyucular C ve C++ için kabul edilen bir tasarımdır. Aslında, C ++ daha detaylı şekilde aynı yaklaşımı kullanarak sorunun daha da kötüleşmesine yol açar. Tasarımsal olarak, C++ programları genel olarak her bir *class* veya birden fazla küçük çaplı class başına bir header dosyası olarak tasarlanmıştır. Örnek olarak *< stdio.h >*'ı alabiliriz. Böylece bağımlılık ilişkisi daha da karmaşık hale gelmiş. Kütüphane bağımlılığında ziyade tür hiyerarşisini yansıtır hale gelmiştir. Buna ek olarak, C++ daki header dosyaları basit sabitler ve fonksiyon tanımlamalarından ziyade gerçek kod olarak tanımlanan tip, metot ve *template* tanımlamalarını içerir. Böylece, C++ derleyiciye derlenmesi zor olan kodu yollamakla kalmaz, derleyici her çağrıldığında bu bilgiyi yeniden işlemek durumunda kalır. Büyük çaplı bir C++ binary'si derlendiğinde, derleyici binlerce kez *< string >* header dosyasına göre string ifadesini nasıl tanımlayacağını anlamaya çalışır. (Bir kayda göre, 1984 yılları civarında Tom Cargill tarafından gözlenen bağımlık yönetimi için C önişlemcisinin kullanılması durumunda, C++ için uzun vadede bir dezavantaj olucağı dile getirildi.)
 
 Google'da ise, yalnızca bir C++ *binary* dosyasının oluşturulması, yüzlerce farklı *header* dosyasını açıp okunmasına neden olucaktır. 2007 yılında, Google mühendisleri oldukça büyük bir *binary* dosyasının derlemesini gerçekleştirdiler. Bu dosya binlerce dosyadan oluşmaktaydı. Eğer basitçe birleştirilseydi toplamı 4.2 megabyte olacaktı. *#include* işlemleri bittikten sonra, 8G'lık içerik derleyiciye bırakılır buda her bir C++ kaynak kodunun kendini 2000 byte şişirmesine yol açacaktır.
 
-Diğer yandan, 2003 yılında Google'ın derleme sistemi basit bir *Makefile*'dan daha iyi yönetilen ve daha açık bağımlıklarla oluşturulan dosya bazlı tasarıma dönüştürüldü. Tipik bir *binary* dosyası sadece doğru bağımlıkların kaydedilmesinden ötürü yaklaşık %40 küçüldü. Bu duruma rağmen, C++(veya C) özellikleri, otomatik olarak bu bağımlıkların doğrulanmasını sağlamayacaktır ve bugün hala bizim büyük çaplı Google' a ait C++ *binary*'lerindeki bağımlılık gereksinimini tam olarak anlayamıyoruz.
+Diğer yandan, 2003 yılında Google'ın derleme sistemi basit bir *Makefile*'dan daha iyi yönetilen ve daha açık bağımlıklarla oluşturulan dosya bazlı tasarıma dönüştürüldü. Tipik bir *binary* dosyası sadece doğru bağımlıkların kaydedilmesinden ötürü yaklaşık %40 küçüldü. Bu duruma rağmen, C++(veya C) özellikleri, otomatik olarak bu bağımlıkların doğrulanmasını sağlamayacaktır ve bugün hala bizim büyük çaplı Google'a ait C++ *binary*'lerindeki bağımlılık gereksinimini tam olarak anlayamıyoruz.
 
-Bu kontrolsüz bağımlıklarının ve ölçekleme sorununun sonucu olarak, Google sunucu *binary*'lerinin tek bir bilgisayarda derlenmesi pek de pratik olmadığı ortaya çıktı. BU yüzden geniş dağıtılmış derleme sistemeleri tasarlandı. Ve bu sistemlere, birden fazla makine dahil edilerek, daha fazla önbellek ile, ve daha fazla karmaşıklık ile (bu derleme sistemi kendi başına büyük bir programdır) Google' da derlemeyi pratik bir hale dönüştürdü, fakat hala hantal olmaya devam ediyor.
+Bu kontrolsüz bağımlıklarının ve ölçekleme sorununun sonucu olarak, Google *binary*'lerinin tek bir bilgisayarda derlenmesi pek de pratik olmadığı ortaya çıktı. BU yüzden geniş dağıtılmış derleme sistemeleri tasarlandı. Ve bu sistemlere, birden fazla makine dahil edilerek, daha fazla önbellek ile, ve daha fazla karmaşıklık ile (bu derleme sistemi kendi başına büyük bir programdır) Google' da derlemeyi pratik bir hale dönüştürdü, fakat hala hantal olmaya devam ediyor.
 
 Dağıtılmış derleme sistemi ile birlikte düşünülecek olsa dahi, büyük bir Google derlemesi dakikalar almaktadır. 2007'deki bu *binary* dağıtılmış derleme sistemi kullanılarak 45 dakika aldı, şuan ki sürümü 27 dakika almakta, tabii bu süreçte programın kendisi ve bağımlılıkları büyüdü. Derleme sisteminin ölçeklenmesini sağlamak için gerekli olan bu mühendislik çabası yazılım inşa edildikçe artmaya devam etmektedir.
 
@@ -429,20 +430,6 @@ Geleneksel C, C ++ ve hatta Java modellerinden çok farklı olan bazı daha büy
 
 Bir sonraki bölümlerde yukarıda bahsedilen *concurrency* ve *garbage collection* özellikleri ile ilgili yazılım mühendisliği bakış açısı ile kısaca bahsedilecektir. Daha detaylı bilgi için [GO!](https://golang.org/)
 
-**13. Eşzamanlılık - Concurrency**
-
-Birden fazla çekirdeğe ve istemciye sahip olan modern bilgisayar sistemleri için *concurrency* önemli bir konudur. C++ veya Java ile yazılmış programların  eşzamanlılık konusunda başarılı olduğunu söylenemez. Bunun nedeni, bu dillerin, dil seviyesinde bu alana yeterince destek vermemiş olmasıdır.
-
-Çevirmen notu:
-"
-Daha fazla ilerlemeden *concurrency*'i nedir bir gözden geçirelim.
-
-Bu kelimeyi ingilizce olarak kullanmaya özen gösterdim. Nedeni Türkçe çevirisinin karmaşaya yol açması olduğunu düşüyorum. 
-
-*Concurrent* çalışan bir uygulamada tasklar aynı aynda işlenir. Örneğin kullanıcı concurrenct bir uygulamada hem müzik dinleyebilir hemde istediği başka bir müziği aynı anda internetten indirebilir. 
-Makine üzerinde tek bir işlemci olduğunda ise bu tasklar aynı anda işlenemeyeceği için işlemci üzerinde işlenen tasklar arasında gözle gözlemlenemeyecek hızlarda değişim gerçekleşir. Bu değişimleri kullanıcı fark edemeyeceği için aynı anda işlem yapılıyor yanılgısına düşecektir.
-
-"
 
 
 
